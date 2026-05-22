@@ -1,0 +1,22 @@
+[package]
+name = "node-access-2role"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "Single-binary node-access tool for relay-backed private network access"
+
+[[bin]]
+name = "node-access"
+path = "src/bin/node-access.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+futures-util = "0.3"
+node_access_common = { package = "node-access-3role", path = "../node-access-3role" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.24"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

@@ -1,0 +1,33 @@
+[package]
+name = "node-access-3role"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "Rust node-relay and node-access tools for relay-backed private network access"
+
+[lib]
+name = "node_access_common"
+path = "src/lib.rs"
+
+[[bin]]
+name = "node-relay"
+path = "src/bin/node-relay.rs"
+
+[[bin]]
+name = "node-access"
+path = "src/bin/node-access.rs"
+
+[dependencies]
+aes-gcm = "0.10"
+anyhow = "1"
+bytes = "1"
+clap = { version = "4", features = ["derive", "env"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.24"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+urlencoding = "2"
