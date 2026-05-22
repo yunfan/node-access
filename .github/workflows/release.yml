@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  TARGET: x86_64-unknown-linux-musl
+  ASSET_DIR: release-artifacts
+
+jobs:
+  linux-x64-musl:
+    name: Build Linux x64 musl release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Cache Rust build output
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --locked --workspace
+
+      - name: Build release binaries
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}"
+
+          cargo build --locked --release --target "${TARGET}" -p relay --bin relay
+          cp "target/${TARGET}/release/relay" \
+            "${ASSET_DIR}/relay-linux-x64-musl"
+
+          cargo build --locked --release --target "${TARGET}" -p node-access-2role --bin node-access
+          cp "target/${TARGET}/release/node-access" \
+            "${ASSET_DIR}/node-access-linux-x64-musl"
+
+          cargo build --locked --release --target "${TARGET}" -p node-access-3role --bin node-access
+          cp "target/${TARGET}/release/node-access" \
+            "${ASSET_DIR}/node-access-3role-linux-x64-musl"
+
+          cargo build --locked --release --target "${TARGET}" -p node-access-3role --bin node-relay
+          cp "target/${TARGET}/release/node-relay" \
+            "${ASSET_DIR}/node-relay-linux-x64-musl"
+
+          chmod +x "${ASSET_DIR}"/*-linux-x64-musl
+
+          cp "${ASSET_DIR}/relay-linux-x64-musl" \
+            "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}/relay"
+          cp "${ASSET_DIR}/node-access-linux-x64-musl" \
+            "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}/node-access"
+          cp "${ASSET_DIR}/node-access-3role-linux-x64-musl" \
+            "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}/node-access-3role"
+          cp "${ASSET_DIR}/node-relay-linux-x64-musl" \
+            "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}/node-relay"
+          cp README.md "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}/README.md"
+
+          tar -C "${ASSET_DIR}" -czf \
+            "${ASSET_DIR}/node-access-${GITHUB_REF_NAME}-${TARGET}.tar.gz" \
+            "node-access-${GITHUB_REF_NAME}-${TARGET}"
+
+          cd "${ASSET_DIR}"
+          sha256sum \
+            relay-linux-x64-musl \
+            node-access-linux-x64-musl \
+            node-access-3role-linux-x64-musl \
+            node-relay-linux-x64-musl \
+            "node-access-${GITHUB_REF_NAME}-${TARGET}.tar.gz" \
+            > SHA256SUMS
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-access-${{ github.ref_name }}-${{ env.TARGET }}
+          path: |
+            ${{ env.ASSET_DIR }}/*-linux-x64-musl
+            ${{ env.ASSET_DIR }}/*.tar.gz
+            ${{ env.ASSET_DIR }}/SHA256SUMS
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ${{ env.ASSET_DIR }}/*-linux-x64-musl
+            ${{ env.ASSET_DIR }}/*.tar.gz
+            ${{ env.ASSET_DIR }}/SHA256SUMS

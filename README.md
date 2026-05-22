@@ -15,6 +15,19 @@ This repository contains:
 cargo build --workspace
 ```
 
+## Release
+
+GitHub Actions builds release artifacts when a version tag is pushed:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow uploads Linux x64 musl binaries for `relay`, the all-in-one
+`node-access`, the 3-role `node-access`, and `node-relay`, plus a tarball and
+`SHA256SUMS`.
+
 ## Relay
 
 Run a local relay server:
