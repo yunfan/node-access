@@ -108,7 +108,7 @@ async fn main() -> Result<()> {
 
     loop {
         if let Err(error) = run_control(&args, Arc::clone(&state)).await {
-            warn!(%error, "control channel disconnected");
+            warn!(error = %format!("{error:#}"), "control channel disconnected");
         }
         tokio::time::sleep(Duration::from_secs(5)).await;
     }

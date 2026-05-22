@@ -187,7 +187,7 @@ async fn run_forever(config: RuntimeConfig) -> Result<()> {
 async fn run_control_forever(config: RuntimeConfig, state: Arc<Mutex<ServeState>>) {
     loop {
         if let Err(error) = run_control(&config, Arc::clone(&state)).await {
-            warn!(%error, "node control channel disconnected");
+            warn!(error = %format!("{error:#}"), "node control channel disconnected");
         }
         tokio::time::sleep(Duration::from_secs(5)).await;
     }

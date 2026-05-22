@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
     }
     loop {
         if let Err(error) = run_once(&args).await {
-            warn!(%error, "node-access disconnected");
+            warn!(error = %format!("{error:#}"), "node-access disconnected");
         }
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
